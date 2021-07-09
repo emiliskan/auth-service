@@ -4,6 +4,7 @@ import logging
 from logging.config import fileConfig
 
 from flask import current_app
+from sqlalchemy import MetaData
 
 from alembic import context
 
@@ -18,13 +19,34 @@ logger = logging.getLogger('alembic.env')
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from role.models import Role
+# from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 config.set_main_option(
     'sqlalchemy.url',
     str(current_app.extensions['migrate'].db.get_engine().url).replace(
         '%', '%%'))
-target_metadata = current_app.extensions['migrate'].db.metadata
+
+
+from models.models import User, Role, RolesUsers, Token, UserHistory, Permission, RolesPermissions
+
+
+def combine_metadata(*args):
+    m = MetaData()
+    for metadata in args:
+        for t in metadata.tables.values():
+            t.tometadata(m)
+    return m
+
+
+target_metadata = combine_metadata(
+    User.metadata,
+    Role.metadata,
+    RolesUsers.metadata,
+    Token.metadata,
+    UserHistory.metadata,
+    Permission.metadata,
+    RolesPermissions.metadata,
+)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
